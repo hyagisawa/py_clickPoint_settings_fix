@@ -5,7 +5,9 @@ import os
 import re
 import shutil
 from pathlib import Path
-from tkinter import messagebox
+
+reg: str = '(^var.+=)([\\s\\S]+);|(^var.+=)([\\s\\S]+)'
+flag: bool = False  # configファイルを変更したとき True
 
 # タイムスタンプ用変数
 d: str = str(datetime.datetime.now()).split('.')[0]
@@ -15,20 +17,11 @@ _stamp: str = d.replace(':', '')
 
 
 def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と JSON（dict）に変換して戻す
-    # reg: str = '(^var.+=)([\s\S]+);'
     f = open(path, 'r', encoding="utf-8")
     s: str = f.read()
     f.close()
-
-    dec: str = re.sub('(^var.+=)([\s\S]+);', '\\1', s)  # 変数名
-    if s[len(s)-1] == '}':
-        json_data: dict = json.loads(re.sub('(^var.+=)([\s\S]+)', '\\2', s))  # JSON 部分
-    elif s[len(s)-1] == ';':
-        json_data: dict = json.loads(re.sub('(^var.+=)([\s\S]+);', '\\2', s))  # JSON 部分
-    # try:
-    #     json_data: dict = json.loads(re.sub(reg, '\\2', s))  # JSON 部分
-    # except:
-    #     print('エラーファイル', path)
+    dec: str = re.sub(reg, '\\1', s)  # 変数名
+    json_data: dict = json.loads(re.sub(reg, '\\2', s))  # JSON 部分
 
     return [dec, json_data]
 
@@ -158,7 +151,7 @@ if __name__ == '__main__':
 
         # 変更がなければ処理終了
         if df == j:
-            print('変更なし:', bn)
+            # print('変更なし:', bn)
             continue
 
         # backup ディレクトリ作成
@@ -173,5 +166,3 @@ if __name__ == '__main__':
         n_d = (d + ' ' + json.dumps(j, ensure_ascii=False)).replace('\n', '') + ';'
         f.write(n_d)
         f.close()
-
-    messagebox.showinfo('処理終了', '処理が正常に完了しました')
