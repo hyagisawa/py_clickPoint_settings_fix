@@ -152,7 +152,7 @@ if __name__ == '__main__':
         j: dict = read_json(cnf)[1]  # JSON 部分
         df: dict = copy.deepcopy(j)  # 比較用に Original を変数にコピー代入
         k_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
-        print('教科書ID', k_id)
+
         # スライド設定調整
         fix_slides_settings(j, k_id)
 
