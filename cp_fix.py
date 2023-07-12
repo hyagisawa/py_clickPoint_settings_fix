@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 
 reg: str = '(^var.+=)([\s\S]+)|(^var.+=)([\s\S]+);'
-flag: bool = False  # configファイルを変更したとき True
 
 # タイムスタンプ用変数
 d: str = str(datetime.datetime.now()).split('.')[0]
@@ -24,7 +23,6 @@ def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と 
     try:
         json_data: dict = json.loads(re.sub(reg, '\\2', s))  # JSON 部分
     except:
-        print('状況',re.sub(reg, '\\2', s))
         print('エラーファイル',path)
         
 
