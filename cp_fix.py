@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 from pathlib import Path
+from tkinter import messagebox
 
 # タイムスタンプ用変数
 d: str = str(datetime.datetime.now()).split('.')[0]
@@ -18,11 +19,11 @@ def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と 
     f = open(path, 'r', encoding="utf-8")
     s: str = f.read()
     f.close()
-    
+
     dec: str = re.sub('(^var.+=)([\s\S]+);', '\\1', s)  # 変数名
-    if  s[len(s)-1]=='}':
+    if s[len(s)-1] == '}':
         json_data: dict = json.loads(re.sub('(^var.+=)([\s\S]+)', '\\2', s))  # JSON 部分
-    elif s[len(s)-1]==';':
+    elif s[len(s)-1] == ';':
         json_data: dict = json.loads(re.sub('(^var.+=)([\s\S]+);', '\\2', s))  # JSON 部分
     # try:
     #     json_data: dict = json.loads(re.sub(reg, '\\2', s))  # JSON 部分
@@ -172,3 +173,5 @@ if __name__ == '__main__':
         n_d = (d + ' ' + json.dumps(j, ensure_ascii=False)).replace('\n', '') + ';'
         f.write(n_d)
         f.close()
+
+    messagebox.showinfo('処理終了', '処理が正常に完了しました')
