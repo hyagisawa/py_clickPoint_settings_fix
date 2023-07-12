@@ -6,8 +6,6 @@ import re
 import shutil
 from pathlib import Path
 
-reg: str = '(^var.+=)([\s\S]+)|(^var.+=)([\s\S]+);'
-
 # タイムスタンプ用変数
 d: str = str(datetime.datetime.now()).split('.')[0]
 d: str = d.replace('-', '')
@@ -16,15 +14,20 @@ _stamp: str = d.replace(':', '')
 
 
 def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と JSON（dict）に変換して戻す
+    # reg: str = '(^var.+=)([\s\S]+);'
     f = open(path, 'r', encoding="utf-8")
     s: str = f.read()
     f.close()
-    dec: str = re.sub(reg, '\\1', s)  # 変数名
-    try:
-        json_data: dict = json.loads(re.sub(reg, '\\2', s))  # JSON 部分
-    except:
-        print('エラーファイル',path)
-        
+    
+    dec: str = re.sub('(^var.+=)([\s\S]+);', '\\1', s)  # 変数名
+    if  s[len(s)-1]=='}':
+        json_data: dict = json.loads(re.sub('(^var.+=)([\s\S]+)', '\\2', s))  # JSON 部分
+    elif s[len(s)-1]==';':
+        json_data: dict = json.loads(re.sub('(^var.+=)([\s\S]+);', '\\2', s))  # JSON 部分
+    # try:
+    #     json_data: dict = json.loads(re.sub(reg, '\\2', s))  # JSON 部分
+    # except:
+    #     print('エラーファイル', path)
 
     return [dec, json_data]
 
