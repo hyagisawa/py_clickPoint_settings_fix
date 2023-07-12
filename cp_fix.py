@@ -1,9 +1,7 @@
 import copy
 import datetime
-import glob
 import json
 import os
-import pprint
 import re
 import shutil
 from pathlib import Path
@@ -19,7 +17,7 @@ _stamp: str = d.replace(':', '')
 
 
 def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と JSON（dict）に変換して戻す
-    f = open(path, 'r')
+    f = open(path, 'r', encoding="utf-8")
     s: str = f.read()
     f.close()
     dec: str = re.sub(reg, '\\1', s)  # 変数名
@@ -29,7 +27,7 @@ def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と 
 
 
 # スライド設定のチェック
-def fix_slides_settings(d: dict) -> None:
+def fix_slides_settings(d: dict, id: str) -> None:
 
     chapter_num: int = d['chapterInfo']['chapter']
 
@@ -54,6 +52,10 @@ def fix_slides_settings(d: dict) -> None:
 
     for p in d['chapterInfo']['pageInfos']:
         clickPoint: dict = p['clickPoint']
+
+        # スライド画像の設定
+        p['filename'] = f'{id}_{chapter_num}-{p["pageIndex"]}.webp'
+
         chapt_n: int = re.sub('(^.+\-)(\d{1,})\..+$', '\\1', p['filename'])  # チャプタ
         cwn: int = int(re.sub('(^.+\-)(\d{1,})\..+$', '\\2', p['filename']))  # 現在のページ
 
@@ -139,12 +141,13 @@ if __name__ == '__main__':
 
     for cnf in configs:
         bn: str = os.path.splitext(os.path.basename(cnf))[0]  # オリジナルファイル - 拡張子なし
-        d: str = read_json(cnf)[0] # 変数部分
-        j: dict = read_json(cnf)[1] # JSON 部分
-        df: dict = copy.deepcopy(j) # 比較用に Original を変数にコピー代入
-
+        d: str = read_json(cnf)[0]  # 変数部分
+        j: dict = read_json(cnf)[1]  # JSON 部分
+        df: dict = copy.deepcopy(j)  # 比較用に Original を変数にコピー代入
+        k_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
+        print('教科書ID', k_id)
         # スライド設定調整
-        fix_slides_settings(j)
+        fix_slides_settings(j, k_id)
 
         # 変更がなければ処理終了
         if df == j:
@@ -157,9 +160,9 @@ if __name__ == '__main__':
 
         # 元ファイルを bacuup フォルダにコピー / backup ファイル名のリネーム
         shutil.copyfile(cnf, Path(f'{bk_dir}/{bn}_{_stamp}'))
-        f = open(Path(f'{cwd}/configs/{os.path.basename(cnf)}'), 'w')
+        f = open(Path(f'{cwd}/configs/{os.path.basename(cnf)}'), 'w', encoding="utf-8")
 
         # 変数部分と結合
-        n_d = (d + ' ' + json.dumps(j, ensure_ascii=False)).replace('\n', '')
+        n_d = (d + ' ' + json.dumps(j, ensure_ascii=False)).replace('\n', '') + ';'
         f.write(n_d)
         f.close()
