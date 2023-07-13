@@ -5,8 +5,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-
-flag: bool = False  # configファイルを変更したとき True
+from tkinter import messagebox
 
 # タイムスタンプ用変数
 d: str = str(datetime.datetime.now()).split('.')[0]
@@ -16,21 +15,18 @@ _stamp: str = d.replace(':', '')
 
 
 def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と JSON（dict）に変換して戻す
-    reg: str = '(^var.+=)([\s\S][^;]+)'
+    reg: str = '(^var.+=)([\s\S]+)|;'
     f = open(path, 'r', encoding="utf-8")
     s: str = f.read()
     f.close()
 
     dec: str = re.sub(reg, '\\1', s)  # 変数名
+    j: str = re.sub(reg, '\\2', s).replace(';', '') # セミコロンを除去
 
-    j: str = re.sub(reg, '\\2', s)  # JSON 部分
+    json_data: dict = json.loads(j)  # JSON 部分
 
-    if 'var' in j:
-        print(j)
 
-    # json_data: dict = json.loads(j)  # JSON 形式に変換
-
-    # return [dec, json_data]
+    return [dec, json_data]
 
 
 # スライド設定のチェック
@@ -147,31 +143,31 @@ if __name__ == '__main__':
     bk_dir = cwd.joinpath(Path('configs'), Path('_backup'))
 
     for cnf in configs:
+        bn: str = os.path.splitext(os.path.basename(cnf))[0]  # オリジナルファイル - 拡張子なし
+        d: str = read_json(cnf)[0]  # 変数部分
+        j: dict = read_json(cnf)[1]  # JSON 部分
+        df: dict = copy.deepcopy(j)  # 比較用に Original を変数にコピー代入
+        k_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
 
-        read_json(cnf)
-        # bn: str = os.path.splitext(os.path.basename(cnf))[0]  # オリジナルファイル - 拡張子なし
-        # d: str = read_json(cnf)[0]  # 変数部分
-        # j: dict = read_json(cnf)[1]  # JSON 部分
-        # df: dict = copy.deepcopy(j)  # 比較用に Original を変数にコピー代入
-        # k_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
+        # スライド設定調整
+        fix_slides_settings(j, k_id)
 
-        # # スライド設定調整
-        # fix_slides_settings(j, k_id)
+        # 変更がなければ処理終了
+        if df == j:
+            print('変更なし:', bn)
+            continue
 
-        # # 変更がなければ処理終了
-        # if df == j:
-        #     # print('変更なし:', bn)
-        #     continue
+        # backup ディレクトリ作成
+        if os.path.isdir(bk_dir) != True:
+            os.mkdir(bk_dir)
 
-        # # backup ディレクトリ作成
-        # if os.path.isdir(bk_dir) != True:
-        #     os.mkdir(bk_dir)
+        # 元ファイルを bacuup フォルダにコピー / backup ファイル名のリネーム
+        shutil.copyfile(cnf, Path(f'{bk_dir}/{bn}_{_stamp}'))
+        f = open(Path(f'{cwd}/configs/{os.path.basename(cnf)}'), 'w', encoding="utf-8")
 
-        # # 元ファイルを bacuup フォルダにコピー / backup ファイル名のリネーム
-        # shutil.copyfile(cnf, Path(f'{bk_dir}/{bn}_{_stamp}'))
-        # f = open(Path(f'{cwd}/configs/{os.path.basename(cnf)}'), 'w', encoding="utf-8")
+        # 変数部分と結合
+        n_d = (d + ' ' + json.dumps(j, ensure_ascii=False)).replace('\n', '') + ';'
+        f.write(n_d)
+        f.close()
 
-        # # 変数部分と結合
-        # n_d = (d + ' ' + json.dumps(j, ensure_ascii=False)).replace('\n', '') + ';'
-        # f.write(n_d)
-        # f.close()
+    messagebox.showinfo('処理終了', '処理が正常に完了しました')
