@@ -4,6 +4,8 @@ import json
 import os
 import re
 import shutil
+import time
+import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox
 
@@ -26,6 +28,10 @@ def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と 
     json_data: dict = json.loads(j)  # JSON 部分
 
     return [dec, json_data]
+
+
+def time_stampID() -> int:
+    return int(time.time()*1000)
 
 
 # スライド設定のチェック
@@ -51,7 +57,7 @@ def fix_slides_settings(d: dict, id: str) -> None:
 
     # チャプター名設定
     d['chapterInfo']['name'] = 'スライド'
-
+    _id_index = 0
     for p in d['chapterInfo']['pageInfos']:
         clickPoint: dict = p['clickPoint']
 
@@ -66,7 +72,17 @@ def fix_slides_settings(d: dict, id: str) -> None:
 
         thum_arr = []
         # クリックポイントを個別にチェック
+
         for cp in clickPoint:
+            # ID の再設定
+
+            _id: int = time_stampID()
+            cp['cpId'] = _id
+            cp['cpUId'] = f'cd_{_id}'
+            cp['resInfo']["resId"] = f'rsc_cp_{_id}'
+
+            time.sleep(.001)
+
             if cp['cpIcon'] != '' and 'thum_' in cp['cpIcon']:
                 thum_arr.append(cp)
 
@@ -171,3 +187,5 @@ if __name__ == '__main__':
         f.close()
 
     messagebox.showinfo('処理終了', '処理が正常に完了しました')
+    root = tk.Tk()
+    root.withdraw()
