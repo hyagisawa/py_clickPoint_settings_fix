@@ -36,12 +36,7 @@ def time_stampID() -> int:
 
 # スライド設定のチェック
 def fix_slides_settings(d: dict, id: str) -> None:
-
-    chapter_num: int = d['chapterInfo']['chapter']
-    if chapter_num < 101 or chapter_num > 399:
-        # スライドチャプタではない場合は処理しない
-        return
-    
+   
     commonInfo: dict = d['commonInfo']
     cmnWidth: int = commonInfo['idvWidth']
     cmnHeight: int = commonInfo['idvHeight']
@@ -67,8 +62,10 @@ def fix_slides_settings(d: dict, id: str) -> None:
         if p['filename'][0] != 'k':
             p['filename'] = f'{id}_{chapter_num}-{cwn}.webp'
 
+        # 教科書学年 ID の取得 2Aなど
         kind_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
 
+        # スライドサムネイル画像リンク生成（前・次）
         prev_thum: str = f'thum_{kind_id}_{chapter_num}-{cwn - 1}.png'
         next_tum: str = f'thum_{kind_id}_{chapter_num}-{cwn + 1}.png'
         
@@ -166,14 +163,17 @@ if __name__ == '__main__':
         
         # cmnBookId に KSK_ ... がない場合は処理しない
         if 'KSK_' not in j['commonInfo']['cmnBookId']:
-            print('変更なし:', bn)
+            print('対象外ファイル:', bn)
             continue
         
         k_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
 
+        
         # スライド設定調整
-        fix_slides_settings(j, k_id)
-
+        chapter_num: int = j['chapterInfo']['chapter']
+        if chapter_num >= 101 or chapter_num <= 399:
+            fix_slides_settings(j, k_id)
+       
         # 変更がなければ処理終了
         if df == j:
             print('変更なし:', bn)
