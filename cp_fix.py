@@ -38,10 +38,10 @@ def time_stampID() -> int:
 def fix_slides_settings(d: dict, id: str) -> None:
 
     chapter_num: int = d['chapterInfo']['chapter']
-
     if chapter_num < 101 or chapter_num > 399:
+        # スライドチャプタではない場合は処理しない
         return
-
+    
     commonInfo: dict = d['commonInfo']
     cmnWidth: int = commonInfo['idvWidth']
     cmnHeight: int = commonInfo['idvHeight']
@@ -57,36 +57,36 @@ def fix_slides_settings(d: dict, id: str) -> None:
 
     # チャプター名設定
     d['chapterInfo']['name'] = 'スライド'
-    _id_index = 0
+
     for p in d['chapterInfo']['pageInfos']:
         clickPoint: dict = p['clickPoint']
 
+        cwn: int = int(p['pageIndex'])  # 現在のページ
+
         # スライド画像の設定
         if p['filename'][0] != 'k':
-            p['filename'] = f'{id}_{chapter_num}-{p["pageIndex"]}.webp'
+            p['filename'] = f'{id}_{chapter_num}-{cwn}.webp'
 
-        chapt_n: int = re.sub('(^.+\-)(\d{1,})\..+$', '\\1', p['filename'])  # チャプタ
-        cwn: int = int(re.sub('(^.+\-)(\d{1,})\..+$', '\\2', p['filename']))  # 現在のページ
+        kind_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
 
-        prev_thum: str = f'thum_{chapt_n}{cwn - 1}.png'
-        next_tum: str = f'thum_{chapt_n}{cwn + 1}.png'
-
+        prev_thum: str = f'thum_{kind_id}_{chapter_num}-{cwn - 1}.png'
+        next_tum: str = f'thum_{kind_id}_{chapter_num}-{cwn + 1}.png'
+        
         thum_arr = []
         # クリックポイントを個別にチェック
-
         for cp in clickPoint:
-            # ID の再設定
 
-            _id: int = time_stampID()
-            cp['cpId'] = _id
-            cp['cpUId'] = f'cd_{_id}'
-            cp['resInfo']["resId"] = f'rsc_cp_{_id}'
-
-            time.sleep(.001)
-
+            # icon リンク画像名に「'thum_'」が含まれる場合
             if cp['cpIcon'] != '' and 'thum_' in cp['cpIcon']:
                 thum_arr.append(cp)
 
+                # ID の再設定
+                _id: int = time_stampID()
+                cp['cpId'] = _id
+                cp['cpUId'] = f'cd_{_id}'
+                cp['resInfo']["resId"] = f'rsc_cp_{_id}'
+
+                time.sleep(.001)
                 # 遷移先を[別タブ]に変更
                 cp['resInfo']['resType'] = 4
                 cp['resInfo']['resLink']['type'] = 5
@@ -163,6 +163,12 @@ if __name__ == '__main__':
         d: str = read_json(cnf)[0]  # 変数部分
         j: dict = read_json(cnf)[1]  # JSON 部分
         df: dict = copy.deepcopy(j)  # 比較用に Original を変数にコピー代入
+        
+        # cmnBookId に KSK_ ... がない場合は処理しない
+        if 'KSK_' not in j['commonInfo']['cmnBookId']:
+            print('変更なし:', bn)
+            continue
+        
         k_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
 
         # スライド設定調整
