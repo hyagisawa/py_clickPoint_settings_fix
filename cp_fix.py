@@ -62,7 +62,8 @@ def fix_slides_settings(d: dict, id: str) -> None:
         clickPoint: dict = p['clickPoint']
 
         # スライド画像の設定
-        p['filename'] = f'{id}_{chapter_num}-{p["pageIndex"]}.webp'
+        if p['filename'][0] != 'k':
+            p['filename'] = f'{id}_{chapter_num}-{p["pageIndex"]}.webp'
 
         chapt_n: int = re.sub('(^.+\-)(\d{1,})\..+$', '\\1', p['filename'])  # チャプタ
         cwn: int = int(re.sub('(^.+\-)(\d{1,})\..+$', '\\2', p['filename']))  # 現在のページ
