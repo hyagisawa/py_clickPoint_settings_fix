@@ -21,10 +21,9 @@ def read_json(path: str) -> list[str, dict]:  # config ファイルを変数と 
     f.close()
 
     dec: str = re.sub(reg, '\\1', s)  # 変数名
-    j: str = re.sub(reg, '\\2', s).replace(';', '') # セミコロンを除去
+    j: str = re.sub(reg, '\\2', s).replace(';', '')  # セミコロンを除去
 
     json_data: dict = json.loads(j)  # JSON 部分
-
 
     return [dec, json_data]
 
@@ -157,6 +156,7 @@ if __name__ == '__main__':
             print('変更なし:', bn)
             continue
 
+        print('変更あり:', bn)
         # backup ディレクトリ作成
         if os.path.isdir(bk_dir) != True:
             os.mkdir(bk_dir)
