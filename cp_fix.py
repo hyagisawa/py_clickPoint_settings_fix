@@ -36,7 +36,7 @@ def time_stampID() -> int:
 
 # スライド設定のチェック
 def fix_slides_settings(d: dict, id: str) -> None:
-   
+
     commonInfo: dict = d['commonInfo']
     cmnWidth: int = commonInfo['idvWidth']
     cmnHeight: int = commonInfo['idvHeight']
@@ -68,7 +68,7 @@ def fix_slides_settings(d: dict, id: str) -> None:
         # スライドサムネイル画像リンク生成（前・次）
         prev_thum: str = f'thum_{kind_id}_{chapter_num}-{cwn - 1}.png'
         next_tum: str = f'thum_{kind_id}_{chapter_num}-{cwn + 1}.png'
-        
+
         thum_arr = []
         # クリックポイントを個別にチェック
         for cp in clickPoint:
@@ -148,6 +148,38 @@ def fix_slides_settings(d: dict, id: str) -> None:
             thum_arr[1]['resInfo']['resLink']['pageIdx'] = cwn + 1
 
 
+'''-------------------------------------------
+----------------------------------------------
+----------------------------------------------
+----------------------------------------------
+-------------------------------------------'''
+
+
+def cp_style_fix(d: dict, id: str) -> None:  # クリックポイントのスタイル修正
+    # クリックポイントを個別にチェック
+    for p in d['chapterInfo']['pageInfos']:
+        clickPoint: dict = p['clickPoint']
+
+        mekuris = []
+        # クリックポイントを個別にチェック
+        for cp in clickPoint:
+
+            # 画像が設定されている cp
+            cp['cpAlpha'] = -1 if cp['cpIcon'] != "" else None  # 不透過に変更
+
+            # めくり紙-別指定
+            if cp['resInfo']['resMekuri']['type'] == 2:
+                cp['cpAlpha'] = '0' if cp['cpAlpha'] != '0' else None  # 透明に変更
+                mekuris = mekuris + cp['resInfo']['resMekuri']['target']
+
+        print(mekuris)
+'''-------------------------------------------
+----------------------------------------------
+----------------------------------------------
+----------------------------------------------
+-------------------------------------------'''
+
+
 if __name__ == '__main__':
 
     cwd = Path(os.path.dirname(__file__))
@@ -160,20 +192,21 @@ if __name__ == '__main__':
         d: str = read_json(cnf)[0]  # 変数部分
         j: dict = read_json(cnf)[1]  # JSON 部分
         df: dict = copy.deepcopy(j)  # 比較用に Original を変数にコピー代入
-        
+
         # cmnBookId に KSK_ ... がない場合は処理しない
-        if 'KSK_' not in j['commonInfo']['cmnBookId']:
-            print('対象外ファイル:', bn)
-            continue
-        
+        # if 'KSK_' not in j['commonInfo']['cmnBookId']:
+        #     print('対象外ファイル:', bn)
+        #     continue
+
         k_id: str = re.sub('KSK_R6_SANSU_(\d.)_[TDM]', '\\1', j['commonInfo']['cmnBookId'])
 
-        
         # スライド設定調整
         chapter_num: int = j['chapterInfo']['chapter']
         if chapter_num >= 101 or chapter_num <= 399:
             fix_slides_settings(j, k_id)
-       
+            cp_style_fix(j, k_id)
+            pass
+
         # 変更がなければ処理終了
         if df == j:
             print('変更なし:', bn)
